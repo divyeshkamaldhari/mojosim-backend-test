@@ -1,0 +1,128 @@
+name: Mojosim Backend Production Deployment
+
+on:
+  push:
+    branches:
+      - production
+  workflow_dispatch:
+
+jobs:
+  package:
+    name: Package - Build and Push Backend Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Decode Environment Variables
+        run: |
+          if [ -z "${{ vars.PROD_BACKEND_ENV_FILE }}" ]; then
+            echo "Error: PROD_BACKEND_ENV_FILE variable is not set under Settings -> Secrets and variables -> Variables!"
+            exit 1
+          fi
+          echo "Decrypting environment variables from base64 and saving to .env"
+          echo "${{ vars.PROD_BACKEND_ENV_FILE }}" | base64 -d > .env
+
+      - name: Log in to DigitalOcean Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: registry.digitalocean.com
+          username: token
+          password: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Build and Push Docker Image
+        run: |
+          echo "Building and pushing Docker image..."
+          docker build -t registry.digitalocean.com/mojosim-registry/mojosim-backend:production .
+          docker push registry.digitalocean.com/mojosim-registry/mojosim-backend:production
+
+      # Install and authenticate the DigitalOcean CLI tool
+      - name: Install DigitalOcean doctl CLI
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      # Trigger DigitalOcean Garbage Collection to clean up untagged images immediately
+      - name: Clean up old untagged images
+        run: |
+          echo "Starting DigitalOcean Container Registry Garbage Collection..."
+          doctl registry garbage-collection start --force
+
+  deploy:
+    name: Deploy - Run Backend Container and DB Configurator on Host
+    runs-on: ubuntu-latest
+    needs: package
+    steps:
+      - name: Deploy via SSH to Production Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_SERVER_IP }}
+          username: ${{ secrets.PRODUCTION_SERVER_USER }}
+          key: ${{ secrets.RUNNER_SERVER_PRIV_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            # Ensure deployment directories exist
+            mkdir -p /opt/mojosim/backend
+            
+            # Create a dedicated docker bridge network for communication between containers
+            docker network create mojosim-network || true
+            
+            # Decode environment variables directly to host server for runtime container use
+            echo "${{ vars.PROD_BACKEND_ENV_FILE }}" | base64 -d > /opt/mojosim/backend/.env
+            
+            # Grant read permissions to the non-privileged container user (UID 1004 / GID 1007)
+            chown -R 1004:1007 /opt/mojosim/backend || true
+            chmod 644 /opt/mojosim/backend/.env
+            
+            # Start Redis container on the network if it does not already exist
+            if [ ! "$(docker ps -a -q -f name=mojosim-backend-redis)" ]; then
+              echo "Starting Redis container..."
+              docker run -d \
+                --name mojosim-backend-redis \
+                --network mojosim-network \
+                --restart always \
+                -v MojoSim-Backend_redis_data:/data \
+                redis:7
+            fi
+            
+            # Log in to DOCR on production server
+            echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u token --password-stdin
+            
+            # Pull latest backend image
+            docker pull registry.digitalocean.com/mojosim-registry/mojosim-backend:production
+            
+            # Run the DB Configurator (one-time task to run database migrations and seeding)
+            # This container runs and automatically deletes itself (--rm) once finished.
+            echo "Running DB Configurator (migrations and seeds)..."
+            docker run --rm \
+              --name mojosim-backend-db-configurator \
+              --network mojosim-network \
+              --env-file /opt/mojosim/backend/.env \
+              registry.digitalocean.com/mojosim-registry/mojosim-backend:production \
+              sh -c "npm run migrate --if-present && npm run seed --if-present"
+            
+            # Stop and remove existing backend app container
+            docker stop mojosim-backend || true
+            docker rm mojosim-backend || true
+            
+            # Run the main backend container under non-privileged UID 1004 and GID 1007
+            docker run -d -t \
+              --name "mojosim-backend" \
+              --network mojosim-network \
+              --user 1004:1007 \
+              --restart always \
+              -p 5000:3000 \
+              --env-file /opt/mojosim/backend/.env \
+              registry.digitalocean.com/mojosim-registry/mojosim-backend:production
+            
+            # Clean up old unused dangling images
+            docker system prune -a --force
+            
+            # Check status
+            docker ps -f name=mojosim-backend
