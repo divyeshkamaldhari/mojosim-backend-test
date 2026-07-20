@@ -1,15 +1,51 @@
+version: '3.8'
+
 services:
-  MojoSim-Backend:
-    container_name: MojoSim-Backend
-    image: registry.webcase.me/node-projects/mojosim/mojosim-backend
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          cpus: "0.25"
-          memory: 256M
+  backend:
+    image: registry.digitalocean.com/mojosim-registry/mojosim-backend:production
+    container_name: mojosim-backend
+    restart: always
+    user: "1004:1007"
+    ports:
+      - "5000:3000"
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - mojosim-network
+
+  db-configurator:
+    image: registry.digitalocean.com/mojosim-registry/mojosim-backend:production
+    container_name: mojosim-backend-db-configurator
+    env_file:
+      - .env
+    networks:
+      - mojosim-network
+    command: >
+      sh -c "
+        npm run migrate --if-present &&
+        npm run seed --if-present
+      "
+
+  redis:
+    image: redis:7
+    container_name: mojosim-backend-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - mojosim-network
+
+volumes:
+  redis_data:
+
 networks:
-  app-network:
-    driver: bridge
+  mojosim-network:
+    name: mojosim-network
