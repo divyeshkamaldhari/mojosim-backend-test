@@ -82,20 +82,14 @@ jobs:
           
           # 5. Decode environment variables to local .env on the runner
           echo "${{ secrets.PROD_BACKEND_ENV_FILE }}" | base64 -d > .env
-          cat .env
-          
-          # 6. Execute Makefile target if defined in the project
-          make production || echo "No makefile target for production found, skipping..."
-          
+                         
           # 7. Pull new images to the remote server and recreate containers
-          docker compose -f production.yml pull
+          docker compose -f docker-compose.yml pull
           
           # 8. Run migrations/seeding before starting main container
           echo "Running database configuration (migrations & seeds)..."
-          docker compose -f production.yml run --rm db-configurator
+          docker compose -f docker-compose.yml run --rm db-configurator
           
           # 9. Start application services
-          docker compose -f production.yml up -d backend redis --force-recreate
-          
-          # 10. Clean up dangling images on the remote server
-          docker image prune -f
+          docker compose -f docker-compose.yml up -d backend redis --force-recreate
+        
