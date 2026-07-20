@@ -1,0 +1,296 @@
+import { StyleSheet } from '@react-pdf/renderer'
+
+export const colors = {
+  navy: '#1f2d3d',
+  primarySoft: '#eafaf8',
+  textFill: '#13253a',
+  muted: '#5f7086',
+  line: '#becbd9',
+  surface: '#ffffff',
+  surfaceAlt: '#f8fbfb',
+  invoiceBadgeBg: '#ffd7e3',
+  invoiceBadgeBorder: '#ff8aaa',
+  invoiceBadgeText: '#d3124a',
+  paidBadgeBg: '#eafaf8',
+  paidBadgeBorder: '#b8ece6',
+  paidBadgeText: '#0f7f74',
+  divider: '#b7c4d6',
+} as const
+
+const flexSpaceBetween = 'space-between' as const
+
+export const invoiceStyles = StyleSheet.create({
+  page: {
+    paddingTop: 51,
+    paddingBottom: 51,
+    paddingHorizontal: 45,
+    fontSize: 10,
+    color: colors.textFill,
+    fontFamily: 'Helvetica',
+  },
+  outerCard: {
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 14,
+    padding: 1,
+  },
+  headerSection: {
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: flexSpaceBetween,
+    alignItems: 'flex-start',
+  },
+  logo: {
+    width: 110,
+    height: 28,
+    objectFit: 'contain',
+    marginBottom: 6,
+  },
+  brandTitle: {
+    fontSize: 20,
+    fontWeight: 700,
+    color: colors.navy,
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 9.5,
+    color: colors.muted,
+  },
+  issuer: {
+    fontSize: 8.5,
+    color: colors.muted,
+    marginTop: 4,
+  },
+  headerRight: {
+    alignItems: 'flex-end',
+  },
+  invoiceBadge: {
+    backgroundColor: colors.invoiceBadgeBg,
+    borderWidth: 1,
+    borderColor: colors.invoiceBadgeBorder,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 6,
+  },
+  invoiceBadgeText: {
+    fontSize: 8.5,
+    fontWeight: 600,
+    color: colors.invoiceBadgeText,
+    letterSpacing: 0.5,
+  },
+  metaText: {
+    fontSize: 9.5,
+    color: colors.muted,
+    textAlign: 'right',
+  },
+  metaBold: {
+    fontWeight: 600,
+  },
+  bodySection: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: colors.surfaceAlt,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  twoColRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  card: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginRight: 10,
+  },
+  cardLast: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  cardLabel: {
+    fontSize: 8.5,
+    fontWeight: 700,
+    color: colors.muted,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  cardName: {
+    fontWeight: 700,
+    marginBottom: 4,
+  },
+  cardEmail: {
+    fontSize: 10,
+    color: colors.textFill,
+  },
+  paymentHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: flexSpaceBetween,
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  paidBadge: {
+    backgroundColor: colors.paidBadgeBg,
+    borderWidth: 1,
+    borderColor: colors.paidBadgeBorder,
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  paidBadgeText: {
+    fontSize: 9,
+    fontWeight: 600,
+    color: colors.paidBadgeText,
+  },
+  paymentDivider: {
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    paddingTop: 6,
+    marginTop: 4,
+  },
+  paymentRow: {
+    flexDirection: 'row',
+    justifyContent: flexSpaceBetween,
+    marginBottom: 4,
+  },
+  paymentLabel: {
+    fontSize: 9.5,
+    color: colors.muted,
+  },
+  paymentValue: {
+    fontSize: 9.5,
+    fontWeight: 600,
+  },
+  lineTable: {
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 10,
+    padding: 1,
+    marginBottom: 8,
+  },
+  lineTableHeader: {
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: colors.primarySoft,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  lineTableHeaderColDesc: {
+    flex: 7.2,
+  },
+  lineTableHeaderColAmt: {
+    flex: 2.8,
+    textAlign: 'right',
+  },
+  lineTableHeaderText: {
+    fontSize: 8.5,
+    fontWeight: 700,
+    color: colors.navy,
+    letterSpacing: 0.5,
+  },
+  lineTableBody: {
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: colors.surface,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  lineDescCol: {
+    flex: 7.2,
+  },
+  lineAmtCol: {
+    flex: 2.8,
+    textAlign: 'right',
+  },
+  lineDestination: {
+    color: colors.muted,
+    fontWeight: 400,
+  },
+  linePlanRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  lineFlag: {
+    width: 20,
+    height: 14,
+    marginRight: 6,
+    objectFit: 'cover',
+    borderRadius: 2,
+  },
+  lineTitle: {
+    fontWeight: 600,
+  },
+  lineAmount: {
+    fontWeight: 600,
+  },
+  totalsWrap: {
+    alignItems: 'flex-end',
+    marginBottom: 8,
+  },
+  totalsBox: {
+    width: '62%',
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 10,
+    padding: 1,
+    overflow: 'hidden',
+  },
+  totalsRows: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: flexSpaceBetween,
+    marginBottom: 6,
+  },
+  totalLabel: {
+    color: colors.muted,
+  },
+  totalsFooter: {
+    flexDirection: 'row',
+    justifyContent: flexSpaceBetween,
+    padding: 8,
+    backgroundColor: colors.primarySoft,
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  totalGrandLabel: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: colors.navy,
+  },
+  totalGrandValue: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: colors.navy,
+  },
+  footer: {
+    fontSize: 8.5,
+    color: colors.muted,
+  },
+})

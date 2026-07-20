@@ -1,0 +1,136 @@
+services:
+  MojoSim-Backend:
+    image: registry.webcase.me/node-projects/mojosim/mojosim-backend:Production
+    container_name: MojoSim-Backend-production
+    environment:
+      - REDIS_URL=redis://mojosim-backend-redis:6379
+    env_file:
+      - .env
+    networks:
+      - traefik-reverse-proxy
+      - MojoSim-Backend-network
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.MojoSim-Backend.rule=Host(`api.mojosim.webcase.me`)
+      - traefik.http.services.MojoSim-Backend.loadbalancer.server.port=3000
+      - traefik.http.middlewares.MojoSim-Backend-proxy.headers.customRequestHeaders.X-Forwarded-For=Client-IP
+      - traefik.http.middlewares.MojoSim-Backend-proxy.headers.customRequestHeaders.X-Real-IP=Client-IP
+      - traefik.http.routers.MojoSim-Backend.middlewares=MojoSim-Backend-proxy
+    restart: on-failure
+    depends_on:
+      db-configurator:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+
+  # MojoSim-Backend-database:
+  #   image: postgres:17
+  #   container_name: MojoSim-Backend-database
+  #   environment:
+  #     - POSTGRES_DB=${DB_NAME}
+  #     - POSTGRES_USER=${DB_USER}
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD}
+  #   volumes:
+  #     - MojoSim-Backend_db_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 4
+  #   networks:
+  #     - MojoSim-Backend-network
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.5"
+  #         memory: 512M
+
+  db-configurator:
+    image: registry.webcase.me/node-projects/mojosim/mojosim-backend:Production
+    container_name: MojoSim-Backend-db-configurator
+    env_file:
+      - .env
+    networks:
+      - MojoSim-Backend-network
+    # depends_on:
+    #   MojoSim-Backend-database:
+    #     condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Running database migrations...' &&
+        npm run migrate --if-present &&
+        echo 'Running database seeding...' &&
+        npm run seed --if-present &&
+        echo 'Database configuration completed successfully!'
+      "
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # adminer:
+  #   image: adminer:latest
+  #   container_name: MojoSim-Backend-adminer
+  #   environment:
+  #     - ADMINER_DEFAULT_SERVER=MojoSim-Backend-database
+  #     - ADMINER_DEFAULT_DB_DRIVER=pgsql
+  #     - ADMINER_DEFAULT_DB_NAME=${DB_NAME}
+  #     - ADMINER_DEFAULT_USERNAME=${DB_USER}
+  #     - ADMINER_DEFAULT_PASSWORD=${DB_PASSWORD}
+  #   networks:
+  #     - traefik-reverse-proxy
+  #     - MojoSim-Backend-network
+  #   # depends_on:
+  #   #   MojoSim-Backend-database:
+  #   #     condition: service_healthy
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.MojoSim-Backend-adminer.rule=Host(`MojoSim-Backend.adminer.webcase.me`)
+  #     - traefik.http.services.MojoSim-Backend-adminer.loadbalancer.server.port=8080
+  #     - traefik.http.middlewares.MojoSim-Backend-adminer-proxy.headers.customRequestHeaders.X-Forwarded-For=Client-IP
+  #     - traefik.http.middlewares.MojoSim-Backend-adminer-proxy.headers.customRequestHeaders.X-Real-IP=Client-IP
+  #     - traefik.http.middlewares.MojoSim-Backend-adminer-auth.basicauth.users=MojoSim-Backend-admin:$$2y$$05$$9jJ4hNrwRStHjt/AiLGhLOLYPyrRQsrH4PvNdJQ3Z3Ifry3pPl3ue
+  #     - traefik.http.routers.MojoSim-Backend-adminer.middlewares=MojoSim-Backend-adminer-auth,MojoSim-Backend-adminer-proxy
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "0.1"
+  #         memory: 256M  
+  redis:
+   image: redis:7
+   container_name: mojosim-backend-redis
+   networks:
+     - MojoSim-Backend-network
+   volumes:
+     - MojoSim-Backend_redis_data:/data
+   healthcheck:
+     test: ["CMD", "redis-cli", "ping"]
+     interval: 30s
+     timeout: 10s
+     retries: 5
+     start_period: 30s
+   deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 256M 
+
+volumes:
+  # MojoSim-Backend_db_data:
+  #   driver: local
+  MojoSim-Backend_redis_data:
+    driver: local
+
+networks:
+  MojoSim-Backend-network:
+  traefik-reverse-proxy:
+    external: true
