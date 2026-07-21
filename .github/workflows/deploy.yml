@@ -48,11 +48,11 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      # Trigger DigitalOcean Garbage Collection to clean up untagged images immediately
-      - name: Clean up old untagged images
-        run: |
-          echo "Starting DigitalOcean Container Registry Garbage Collection..."
-          doctl registry garbage-collection start --force
+      # # Trigger DigitalOcean Garbage Collection to clean up untagged images immediately
+      # - name: Clean up old untagged images
+      #   run: |
+      #     echo "Starting DigitalOcean Container Registry Garbage Collection..."
+      #     doctl registry garbage-collection start --force
 
   deploy:
     name: Deploy - Remote Docker Compose Execution
