@@ -5,6 +5,8 @@ services:
     depends_on:
       db-configurator:
         condition: service_completed_successfully
+    ports:
+      - "3002:3000"
     deploy:
       resources:
         limits:
@@ -18,13 +20,6 @@ services:
     env_file:
       - .env
     image: registry.digitalocean.com/mojosim-registry/mojosim-backend:production
-    labels:
-      traefik.enable: "true"
-      traefik.http.middlewares.MojoSim-Backend-proxy.headers.customRequestHeaders.X-Forwarded-For: Client-IP
-      traefik.http.middlewares.MojoSim-Backend-proxy.headers.customRequestHeaders.X-Real-IP: Client-IP
-      traefik.http.routers.MojoSim-Backend.middlewares: MojoSim-Backend-proxy
-      traefik.http.routers.MojoSim-Backend.rule: Host(`api.mojosim.webcase.me`)
-      traefik.http.services.MojoSim-Backend.loadbalancer.server.port: "3000"
     networks:
       MojoSim-Backend-network: null
     restart: on-failure
