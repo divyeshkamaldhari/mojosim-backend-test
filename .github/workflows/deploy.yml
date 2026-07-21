@@ -87,18 +87,15 @@ jobs:
           echo "${{ secrets.PROD_BACKEND_ENV_FILE }}" | base64 -d > .env
           cat .env
           
-          # 6. Execute Makefile target if defined in the project
-          make production || echo "No makefile target for production found, skipping..."
-          
-          # 7. Pull new images to the remote server and recreate containers
+          # 6. Pull new images to the remote server and recreate containers
           docker compose -f production.yml pull
           
-          # 8. Run migrations/seeding before starting main container
+          # 7. Run migrations/seeding before starting main container
           echo "Running database configuration (migrations & seeds)..."
           docker compose -f production.yml run --rm db-configurator
           
-          # 9. Start application services
+          # 8. Start application services (backend only)
           docker compose -f production.yml up -d MojoSim-Backend --force-recreate
           
-          # 10. Clean up dangling images on the remote server
+          # 9. Clean up dangling images on the remote server
           docker image prune -f
