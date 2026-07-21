@@ -29,6 +29,14 @@ import { setupAssociations } from '../models/associations'
 export const sequelize = new Sequelize(getDatabaseUrl(), {
   dialect: 'postgres',
   logging: env.NODE_ENV === 'development' ? (msg) => logger.debug(msg) : false,
+  dialectOptions: env.NODE_ENV === 'production' || env.NODE_ENV === 'staging'
+    ? {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      }
+    : {},
   models: [
     User,
     UserSession,
