@@ -5,7 +5,6 @@ services:
     depends_on:
       db-configurator:
         condition: service_completed_successfully
-        required: tr  ue
     deploy:
       resources:
         limits:

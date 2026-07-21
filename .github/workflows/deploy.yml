@@ -78,7 +78,7 @@ jobs:
           export DOCKER_HOST="ssh://${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }}"
           
           # Ensure that the shared Docker network exists on the remote host server
-          docker network create mojosim-network || true
+          docker network inspect mojosim-network >/dev/null 2>&1 || docker network create mojosim-network
           
           # 4. Log in to registry on the remote host via the DOCKER_HOST connection
           echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u token --password-stdin
