@@ -27,7 +27,6 @@ services:
       traefik.http.services.MojoSim-Backend.loadbalancer.server.port: "3000"
     networks:
       MojoSim-Backend-network: null
-      traefik-reverse-proxy: null
     restart: on-failure
   db-configurator:
     command:
@@ -57,7 +56,4 @@ services:
 networks:
   MojoSim-Backend-network:
     name: mojosim-network
-    external: true
-  traefik-reverse-proxy:
-    name: traefik-reverse-proxy
     external: true
