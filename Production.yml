@@ -5,10 +5,7 @@ services:
     depends_on:
       db-configurator:
         condition: service_completed_successfully
-        required: true
-      redis:
-        condition: service_healthy
-        required: true
+        required: tr  ue
     deploy:
       resources:
         limits:
@@ -19,7 +16,9 @@ services:
           memory: "268435456"
     environment:
       REDIS_URL: redis://mojosim-backend-redis:6379
-    image: registry.webcase.me/node-projects/mojosim/mojosim-backend:Production
+    env_file:
+      - .env
+    image: registry.digitalocean.com/mojosim-registry/mojosim-backend:production
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.MojoSim-Backend-proxy.headers.customRequestHeaders.X-Forwarded-For: Client-IP
@@ -51,40 +50,16 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-    image: registry.webcase.me/node-projects/mojosim/mojosim-backend:Production
+    env_file:
+      - .env
+    image: registry.digitalocean.com/mojosim-registry/mojosim-backend:production
     networks:
       MojoSim-Backend-network: null
-  redis:
-    container_name: mojosim-backend-redis
-    deploy:
-      resources:
-        limits:
-          cpus: 0.1
-          memory: "268435456"
-    healthcheck:
-      test:
-        - CMD
-        - redis-cli
-        - ping
-      timeout: 10s
-      interval: 30s
-      retries: 5
-      start_period: 30s
-    image: redis:7
-    networks:
-      MojoSim-Backend-network: null
-    volumes:
-      - type: volume
-        source: MojoSim-Backend_redis_data
-        target: /data
-        volume: {}
+
 networks:
   MojoSim-Backend-network:
-    name: mojosim-backend_MojoSim-Backend-network
+    name: mojosim-network
+    external: true
   traefik-reverse-proxy:
     name: traefik-reverse-proxy
     external: true
-volumes:
-  MojoSim-Backend_redis_data:
-    name: mojosim-backend_MojoSim-Backend_redis_data
-    driver: local

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7
+    container_name: mojosim-backend-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - mojosim-network
+
+volumes:
+  redis_data:
+    name: mojosim-backend_MojoSim-Backend_redis_data
+
+networks:
+  mojosim-network:
+    name: mojosim-network
+    external: true

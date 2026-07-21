@@ -77,19 +77,28 @@ jobs:
           # 3. Connect to the remote server Docker daemon via SSH
           export DOCKER_HOST="ssh://${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }}"
           
+          # Ensure that the shared Docker network exists on the remote host server
+          docker network create mojosim-network || true
+          
           # 4. Log in to registry on the remote host via the DOCKER_HOST connection
           echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u token --password-stdin
           
           # 5. Decode environment variables to local .env on the runner
           echo "${{ secrets.PROD_BACKEND_ENV_FILE }}" | base64 -d > .env
-                         
+          cat .env
+          
+          # 6. Execute Makefile target if defined in the project
+          make production || echo "No makefile target for production found, skipping..."
+          
           # 7. Pull new images to the remote server and recreate containers
-          docker compose -f docker-compose.yml pull
+          docker compose -f production.yml pull
           
           # 8. Run migrations/seeding before starting main container
           echo "Running database configuration (migrations & seeds)..."
-          docker compose -f docker-compose.yml run --rm db-configurator
+          docker compose -f production.yml run --rm db-configurator
           
           # 9. Start application services
-          docker compose -f docker-compose.yml up -d backend redis --force-recreate
-        
+          docker compose -f production.yml up -d MojoSim-Backend --force-recreate
+          
+          # 10. Clean up dangling images on the remote server
+          docker image prune -f
