@@ -85,7 +85,6 @@ jobs:
           
           # 5. Decode environment variables to local .env on the runner
           echo "${{ secrets.PROD_BACKEND_ENV_FILE }}" | base64 -d > .env
-          cat .env
           
           # 6. Pull new images to the remote server and recreate containers
           docker compose -f production.yml pull
@@ -97,5 +96,5 @@ jobs:
           # 8. Start application services (backend only)
           docker compose -f production.yml up -d MojoSim-Backend --force-recreate
           
-          # 9. Clean up dangling images on the remote server
-          docker image prune -f
+          # # 9. Clean up dangling images on the remote server
+          # docker image prune -f
